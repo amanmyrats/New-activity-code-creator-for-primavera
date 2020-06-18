@@ -1,0 +1,27 @@
+
+Public benimBaglantim As ADODB.Connection
+Public wbsSheet As Worksheets
+Public baglantiYolum, sqlKodum As String
+Public dokum, rsProj, rsaccess As ADODB.Recordset
+Public rsProjList As ADODB.Recordset
+Public benimDonguRecordum, benimDonguRecordum1 As ADODB.Recordset
+Public benimKullaniciAdim, benimSifrem, benimServerim, benimDatabaseim, benimTablom, strBenimProjem As String
+Public eskiParentID As Long
+Public satirsayisi  As Integer
+Public wbsIDForActivity As Double
+Public kolonsayisi As Integer
+Public levelofWBS As Integer
+Public tradeWBSShortName As String
+Public sonkolonsayisi As Integer
+Public renklenecekAlan As Range
+Public sonkolonharfi As String
+Public wbsID As String
+Public projID As String
+Public wbsshortname As String
+Public wbsname As String
+Public parentWBSID As String
+Public recordsetName As ADODB.Recordset
+Public benimRecordSetim As ADODB.Recordset
+Public benimRecordSetim1 As ADODB.Recordset
+Public level7ToplamAltGrubu As Integer
+Public tempQueueNo As Integer
