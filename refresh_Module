@@ -1,0 +1,91 @@
+
+Sub refreshDB()
+Dim rsDBlist As ADODB.Recordset
+sheets("index").comboDBlist.Clear
+sheets("index").comboDBlist.Value = "TEST_DB"
+
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+strBenimProjem = sheets("index").ComboProjShortName.Value
+Set rsProjList = New ADODB.Recordset
+Set benimBaglantim = New ADODB.Connection
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim
+benimBaglantim.Open baglantiYolum
+
+Set rsDBlist = benimBaglantim.Execute("select name from master.sys.databases WHERE name NOT IN ('master', 'tempdb', 'model', 'msdb', 'EPPM')")
+
+Do While Not rsDBlist.EOF
+
+sheets("index").comboDBlist.AddItem rsDBlist.Fields.Item(0)
+rsDBlist.MoveNext
+Loop
+
+End Sub
+Sub refreshTableList()
+Dim rsTableList As ADODB.Recordset
+
+sheets("index").ComboTableList.Clear
+sheets("index").ComboTableList.Value = "Choose Table"
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+strBenimProjem = sheets("index").ComboProjShortName.Value
+Set rsProjList = New ADODB.Recordset
+Set benimBaglantim = New ADODB.Connection
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim & "; Initial Catalog=" & benimDatabaseim
+benimBaglantim.Open baglantiYolum
+Set rsTableList = benimBaglantim.Execute("select * from sysobjects where xtype='U'")
+
+Do While Not rsTableList.EOF
+
+sheets("index").ComboTableList.AddItem rsTableList.Fields.Item(0)
+
+rsTableList.MoveNext
+Loop
+
+End Sub
+
+Sub refreshProjList()
+
+sheets("index").ComboProjShortName.Clear
+sheets("index").ComboProjShortName.Value = "Choose Project"
+'Sheets("index").ComboProjShortName.AddItem "A"
+'Sheets("index").ComboProjShortName.AddItem "B"
+'Sheets("index").ComboProjShortName.AddItem "C"
+
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+strBenimProjem = sheets("index").ComboProjShortName.Value
+Set rsProjList = New ADODB.Recordset
+Set benimBaglantim = New ADODB.Connection
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim & "; Initial Catalog=" & benimDatabaseim
+
+benimBaglantim.Open baglantiYolum
+
+Set rsProjList = benimBaglantim.Execute("SELECT proj_short_name FROM PROJECT WHERE project_flag='Y' ORDER BY proj_short_name ASC")
+
+'Sheets("deneme").Range("A1").CopyFromRecordset rsProjList
+
+Do While Not rsProjList.EOF
+
+
+sheets("index").ComboProjShortName.AddItem rsProjList.Fields.Item(0)
+
+
+rsProjList.MoveNext
+Loop
+
+End Sub
+
+
