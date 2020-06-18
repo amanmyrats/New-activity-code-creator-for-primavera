@@ -1,0 +1,50 @@
+Sub getMyData(satir As Integer, kolon As Integer, getWBSID As String, getProjID As String, getWBSShort As String, getWBSName As String, getParentWBSID As String, levelofWBS As Integer)
+
+sheets("Dokum").Cells(satir, kolon) = getWBSID
+sheets("Dokum").Cells(satir, kolon + 1) = getProjID
+'sheets("Dokum").Cells(satir, kolon + 2) = obsID
+'sheets("Dokum").Cells(satir, kolon + 3) = seqNum
+sheets("Dokum").Cells(satir, kolon + 4) = getWBSShort
+sheets("Dokum").Cells(satir, kolon + 5) = getWBSName
+sheets("Dokum").Cells(satir, kolon + 6) = getParentWBSID
+
+
+Select Case levelofWBS
+
+Case 2
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C7:R100C7,0)"
+
+Case 3
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C10:R100C10,0)"
+
+Case 4
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C13:R100C13,0)"
+
+Case 5
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C16:R100C16,0)"
+
+Case 6
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C19:R100C19,0)"
+
+Case 7
+
+    sheets("Dokum").Cells(satir, kolon + 11).Formula = "=MATCH(RC[-7],Coding!R7C22:R100C22,0)"
+
+Case 8
+    
+    sheets("Dokum").Cells(satir, kolon + 11).Value = "=MATCH(RC[-7],Coding!R7C25:R100C25,0)"
+
+Case 9
+
+    sheets("Dokum").Cells(satir, kolon + 11).Value = "Level-9 has no standard name table yet!"
+
+End Select
+
+
+End Sub
+
