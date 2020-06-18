@@ -1,0 +1,342 @@
+Sub importWBS()
+Application.ScreenUpdating = False
+Application.Calculation = xlManual
+Dim wbsID As String
+
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+strBenimProjem = sheets("index").ComboProjShortName.Value
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim & "; Initial Catalog=" & benimDatabaseim
+
+'Set wbsSheet = New Worksheet
+Set benimBaglantim = New ADODB.Connection
+Set benimRecordSetim = New ADODB.Recordset
+Set benimRecordSetim1 = New ADODB.Recordset
+Set recordsetName = New ADODB.Recordset
+
+benimBaglantim.Open baglantiYolum
+
+Range("B2").Value = benimBaglantim.State
+
+satirsayisi = 2
+kolonsayisi = 1
+'sonkolonsayisi = 11
+'sonkolonharfi = "K"
+level7ToplamAltGrubu = 0
+'Set rsProj = benimBaglantim.Execute("Update PROJECT set scope_level = 7 where proj_short_name = 'WBS_TEST'")
+'Set rsaccess = benimBaglantim.Execute("Update PROJECT set access_level = 1 where proj_short_name = 'WBS_TEST'")
+
+Set benimRecordSetim = benimBaglantim.Execute("SELECT * from PROJWBS WHERE wbs_short_name='" + strBenimProjem + "'")
+'recordsetName = "benimRecordSetim"
+sheets("Dokum").Cells.ClearContents
+sheets("Dokum").Cells.Interior.ColorIndex = RGB(0, 0, 0)
+sheets("dokum").Columns(5).NumberFormat = "@"
+sheets("dokum").Columns(8).NumberFormat = "@"
+
+'field titles are written here
+sheets("Dokum").Cells(1, 1) = benimRecordSetim.Fields(0).Name
+sheets("Dokum").Cells(1, 2) = benimRecordSetim.Fields(1).Name
+sheets("Dokum").Cells(1, 3) = benimRecordSetim.Fields(2).Name
+sheets("Dokum").Cells(1, 4) = benimRecordSetim.Fields(3).Name
+sheets("Dokum").Cells(1, 5) = benimRecordSetim.Fields(8).Name
+sheets("Dokum").Cells(1, 6) = benimRecordSetim.Fields(9).Name
+sheets("Dokum").Cells(1, 7) = benimRecordSetim.Fields(11).Name
+sheets("Dokum").Cells(1, 8) = "Existing Activity Code"
+sheets("Dokum").Cells(1, 10) = "WBS Level"
+sheets("Dokum").Cells(1, 12) = "WBS Code Check"
+sheets("Dokum").Cells(1, 13) = "Check Duplicates"
+
+'Do While Not benimRecordSetim.EOF
+
+wbsID = benimRecordSetim.Fields.Item(0).Value
+projID = benimRecordSetim.Fields.Item(1).Value
+obsID = benimRecordSetim.Fields.Item(2).Value
+seqNum = benimRecordSetim.Fields.Item(3).Value
+wbsshortname = benimRecordSetim.Fields.Item(8).Value
+wbsname = benimRecordSetim.Fields.Item(9).Value
+parentWBSID = benimRecordSetim.Fields.Item(11).Value
+
+levelofWBS = 1
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+satirsayisi = satirsayisi + 1
+
+tradeWBSShortName = ""
+
+'Project Short name has been populated manually for now
+'ParentWbsName1 = ParentWbsNameRecord1.Fields.Item(0).Value
+ParentWbsName1 = "SBA"
+
+'Level-2 Stages
+Set benimDonguRecordum = benimBaglantim.Execute("SELECT * from PROJWBS WHERE parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord1 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+Do While Not benimDonguRecordum.EOF
+
+wbsID = benimDonguRecordum.Fields.Item(0).Value
+projID = benimDonguRecordum.Fields.Item(1).Value
+obsID = benimDonguRecordum.Fields.Item(2).Value
+seqNum = benimDonguRecordum.Fields.Item(3).Value
+wbsshortname = benimDonguRecordum.Fields.Item(8).Value
+wbsname = benimDonguRecordum.Fields.Item(9).Value
+parentWBSID = benimDonguRecordum.Fields.Item(11).Value
+levelofWBS = 2
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbRed)
+
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+tradeWBSShortName = ""
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 0
+satirsayisi = satirsayisi + 1
+benimDonguRecordum.MoveNext
+
+'Level-3 Tades
+Set benimDonguRecordum1 = benimBaglantim.Execute("SELECT * FROM PROJWBS WHERE parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord2 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName2 = ParentWbsNameRecord2.Fields.Item(0).Value
+Do While Not benimDonguRecordum1.EOF
+
+wbsID = benimDonguRecordum1.Fields.Item(0).Value
+projID = benimDonguRecordum1.Fields.Item(1).Value
+obsID = benimDonguRecordum1.Fields.Item(2).Value
+seqNum = benimDonguRecordum1.Fields.Item(3).Value
+wbsshortname = benimDonguRecordum1.Fields.Item(8).Value
+wbsname = benimDonguRecordum1.Fields.Item(9).Value
+parentWBSID = benimDonguRecordum1.Fields.Item(11).Value
+levelofWBS = 3
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbMagenta)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+tradeWBSShortName = ""
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 1
+satirsayisi = satirsayisi + 1
+benimDonguRecordum1.MoveNext
+
+'Level-4 Sub-Trades
+Set benimdongurecordum2 = benimBaglantim.Execute("SELECT * from PROJWBS WHERE parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord3 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName3 = ParentWbsNameRecord3.Fields.Item(0).Value
+Do While Not benimdongurecordum2.EOF
+
+wbsID = benimdongurecordum2.Fields.Item(0).Value
+projID = benimdongurecordum2.Fields.Item(1).Value
+obsID = benimdongurecordum2.Fields.Item(2).Value
+seqNum = benimdongurecordum2.Fields.Item(3).Value
+wbsshortname = benimdongurecordum2.Fields.Item(8).Value
+wbsname = benimdongurecordum2.Fields.Item(9).Value
+parentWBSID = benimdongurecordum2.Fields.Item(11).Value
+levelofWBS = 4
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbGreen)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+tradeWBSShortName = wbsshortname
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 1
+satirsayisi = satirsayisi + 1
+benimdongurecordum2.MoveNext
+
+'Level-5 Building
+Set benimdongurecordum3 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord4 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName4 = ParentWbsNameRecord4.Fields.Item(0).Value
+Do While Not benimdongurecordum3.EOF
+
+wbsID = benimdongurecordum3.Fields.Item(0).Value
+projID = benimdongurecordum3.Fields.Item(1).Value
+obsID = benimdongurecordum3.Fields.Item(2).Value
+seqNum = benimdongurecordum3.Fields.Item(3).Value
+wbsshortname = benimdongurecordum3.Fields.Item(8).Value
+wbsname = benimdongurecordum3.Fields.Item(9).Value
+parentWBSID = benimdongurecordum3.Fields.Item(11).Value
+levelofWBS = 5
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4
+Call renkle_Module.renkle(satirsayisi, vbYellow)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 1
+satirsayisi = satirsayisi + 1
+benimdongurecordum3.MoveNext
+
+'Level-6 Block
+Set benimdongurecordum4 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord5 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName5 = ParentWbsNameRecord5.Fields.Item(0).Value
+Do While Not benimdongurecordum4.EOF
+
+wbsID = benimdongurecordum4.Fields.Item(0).Value
+projID = benimdongurecordum4.Fields.Item(1).Value
+obsID = benimdongurecordum4.Fields.Item(2).Value
+seqNum = benimdongurecordum4.Fields.Item(3).Value
+wbsshortname = benimdongurecordum4.Fields.Item(8).Value
+wbsname = benimdongurecordum4.Fields.Item(9).Value
+parentWBSID = benimdongurecordum4.Fields.Item(11).Value
+levelofWBS = 6
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName5 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4 & "." & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbCyan)
+
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 1
+satirsayisi = satirsayisi + 1
+benimdongurecordum4.MoveNext
+
+'Level-7 Level
+Set benimdongurecordum5 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord6 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName6 = ParentWbsNameRecord6.Fields.Item(0).Value
+level7ToplamAltGrubu = benimdongurecordum5.RecordCount * -1
+
+Range("B1").Value = level7ToplamAltGrubu
+Do While Not benimdongurecordum5.EOF
+
+wbsID = benimdongurecordum5.Fields.Item(0).Value
+projID = benimdongurecordum5.Fields.Item(1).Value
+obsID = benimdongurecordum5.Fields.Item(2).Value
+seqNum = benimdongurecordum5.Fields.Item(3).Value
+wbsshortname = benimdongurecordum5.Fields.Item(8).Value
+wbsname = benimdongurecordum5.Fields.Item(9).Value
+parentWBSID = benimdongurecordum5.Fields.Item(11).Value
+levelofWBS = 7
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName5 & "." & ParentWbsName6 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName6 & "." & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbCyan)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+tempQueueNo = 1
+satirsayisi = satirsayisi + 1
+benimdongurecordum5.MoveNext
+
+'Level-8 Reserved
+Set benimdongurecordum6 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord7 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName7 = ParentWbsNameRecord7.Fields.Item(0).Value
+Do While Not benimdongurecordum6.EOF
+
+wbsID = benimdongurecordum6.Fields.Item(0).Value
+projID = benimdongurecordum6.Fields.Item(1).Value
+obsID = benimdongurecordum6.Fields.Item(2).Value
+seqNum = benimdongurecordum6.Fields.Item(3).Value
+wbsshortname = benimdongurecordum6.Fields.Item(8).Value
+wbsname = benimdongurecordum6.Fields.Item(9).Value
+parentWBSID = benimdongurecordum6.Fields.Item(11).Value
+levelofWBS = 8
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName5 & "." & ParentWbsName6 & "." & ParentWbsName7 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName6 & "." & ParentWbsName7 & "." & wbsshortname
+Call renkle_Module.renkle(satirsayisi, vbYellow)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+
+satirsayisi = satirsayisi + 1
+benimdongurecordum6.MoveNext
+
+'Level-9 Reserved
+Set benimdongurecordum7 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord8 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName8 = ParentWbsNameRecord7.Fields.Item(0).Value
+Do While Not benimdongurecordum7.EOF
+
+wbsID = benimdongurecordum7.Fields.Item(0).Value
+projID = benimdongurecordum7.Fields.Item(1).Value
+obsID = benimdongurecordum7.Fields.Item(2).Value
+seqNum = benimdongurecordum7.Fields.Item(3).Value
+wbsshortname = benimdongurecordum7.Fields.Item(8).Value
+wbsname = benimdongurecordum7.Fields.Item(9).Value
+parentWBSID = benimdongurecordum7.Fields.Item(11).Value
+levelofWBS = 9
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName5 & "." & ParentWbsName6 & "." & ParentWbsName7 & "." & ParentWbsName8 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName6 & "." & ParentWbsName7
+Call renkle_Module.renkle(satirsayisi, vbYellow)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+
+satirsayisi = satirsayisi + 1
+benimdongurecordum7.MoveNext
+
+'Level-10 Reserved
+Set benimdongurecordum8 = benimBaglantim.Execute("SELECT * from PROJWBS where parent_wbs_id='" & wbsID & "' order by seq_num ASC")
+Set ParentWbsNameRecord9 = benimBaglantim.Execute("SELECT wbs_short_name from PROJWBS where wbs_id='" & wbsID & "'")
+ParentWbsName9 = ParentWbsNameRecord7.Fields.Item(0).Value
+Do While Not benimdongurecordum8.EOF
+
+wbsID = benimdongurecordum8.Fields.Item(0).Value
+projID = benimdongurecordum8.Fields.Item(1).Value
+obsID = benimdongurecordum8.Fields.Item(2).Value
+seqNum = benimdongurecordum8.Fields.Item(3).Value
+wbsshortname = benimdongurecordum8.Fields.Item(8).Value
+wbsname = benimdongurecordum8.Fields.Item(9).Value
+parentWBSID = benimdongurecordum8.Fields.Item(11).Value
+levelofWBS = 10
+Call dotheSteps_Module.getMyData(satirsayisi, kolonsayisi, wbsID, projID, wbsshortname, wbsname, parentWBSID, levelofWBS)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 7) = ParentWbsName1 & "." & ParentWbsName2 & "." & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName5 & "." & ParentWbsName6 & "." & ParentWbsName7 & "." & ParentWbsName8 & "." & ParentWbsName9 & "." & wbsshortname
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 8) = ParentWbsName1 & "." & ParentWbsName2 & ParentWbsName3 & "." & ParentWbsName4 & "." & ParentWbsName6 & "." & ParentWbsName7 & "." & ParentWbsName7
+Call renkle_Module.renkle(satirsayisi, vbYellow)
+
+sheets("Dokum").Cells(satirsayisi, kolonsayisi + 9) = levelofWBS
+
+Call getActivity_Module.GetActivities(satirsayisi, wbsID, levelofWBS, tradeWBSShortName, level7ToplamAltGrubu, tempQueueNo)
+
+satirsayisi = satirsayisi + 1
+benimdongurecordum8.MoveNext
+
+Loop
+Loop
+Loop
+Loop
+Loop
+Loop
+Loop
+Loop
+Loop
+
+Application.ScreenUpdating = True
+'Sheets("Dokum").Range("A2").CopyFromRecordset dokum
+ActiveWindow.FreezePanes = False
+sheets("Dokum").Activate
+sheets("dokum").Range("A2").Select
+ActiveWindow.FreezePanes = True
+sheets("dokum").Range("A:M").AutoFilter
+Application.Calculation = xlAutomatic
+
+End Sub
+
