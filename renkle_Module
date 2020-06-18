@@ -1,0 +1,5 @@
+Sub renkle(satirnumarasi As Integer, renkismi As String)
+
+sheets("dokum").Range("A" & satirsayisi & ":M" & satirsayisi).Interior.Color = renkismi
+
+End Sub
