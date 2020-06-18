@@ -1,0 +1,54 @@
+Sub CreatTable()
+
+Dim benimBaglantim As ADODB.Connection
+Dim wbsSheet As Worksheets
+Dim baglantiYolum As String
+Dim dokum, rsProj, rsaccess, benimRecordSetim, benimRecordSetim1, rswbsID As ADODB.Recordset
+Dim benimDonguRecordum, benimDonguRecordum1, tabloekle, tabloUpdate, tabloInsert As ADODB.Recordset
+Dim benimKullaniciAdim, benimSifrem, benimServerim, benimDatabaseim, benimTablom As String
+Dim eskiParentID As Long
+
+Set benimBaglantim = New ADODB.Connection
+Set benimRecordSetim = New ADODB.Recordset
+Set benimRecordSetim1 = New ADODB.Recordset
+Set tabloUpdate = New ADODB.Recordset
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim & "; Initial Catalog=" & benimDatabaseim
+
+benimBaglantim.Open baglantiYolum
+
+Range("A1").Select
+Selection.Value = benimBaglantim.State
+
+'Set rsProj = benimBaglantim.Execute("Update PROJWBS set access_level=1, scope_level = 7 where proj_id = '9116'")
+
+'benimBaglantim.Execute ("ALTER TABLE projwbs ADD concat_name VARCHAR(50)")
+''Set benimRecordSetim1 = benimBaglantim.Execute("select concat_name, wbs_short_name from projwbs")
+'
+'sheets("Sheet2").Range("A1").Value = benimRecordSetim1.Fields(0).Name
+'sheets("Sheet2").Range("B1").Value = benimRecordSetim1.Fields(1).Name
+'
+'sheets("Sheet2").Range("A2").CopyFromRecordset benimRecordSetim1
+Dim aa As String
+Dim bb As String
+For a = 2 To 10
+
+aa = sheets("dokum").Range("A" & a).Value
+
+bb = sheets("dokum").Range("K" & a).Value
+Set tabloUpdate = benimBaglantim.Execute("UPDATE PROJWBS SET wbs_name='" & bb & "' WHERE wbs_id='" + aa + "'")
+
+
+Next a
+'Set rswbsID = benimBaglantim.Execute("select last_assigned_key from system_tables where api_table_name = 'PROJWBS'")
+'sonWBSID = rswbsID.Fields.Item(0).Value
+            
+'Set tabloInsert = benimBaglantim.Execute("INSERT INTO PROJWBS (wbs_id, wbs_name,wbs_short_name, parent_wbs_id, proj_id, obs_id, seq_num, status_code) VALUES ('0','Level 01 aman test', '0000011111','468936', '9116', '565', '0', '0')")
+
+End Sub
+
