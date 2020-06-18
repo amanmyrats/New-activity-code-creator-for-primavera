@@ -1,0 +1,135 @@
+Sub GetActivities(ByRef satirsayisi As Integer, ByVal wbsIDForActivity As Double, level As Integer, trade As String, onlyForLevel8 As Integer, ByRef tempQueueNo As Integer)
+
+'Dim strSuspend As String  'Suspend Variable added 6/1/07
+'Dim strResume As String   'Resume Variable added 6/1/07
+
+'Set wbsSheet = New Worksheet
+Set benimBaglantim = New ADODB.Connection
+Set benimRecordSetim = New ADODB.Recordset
+Set benimRecordSetim1 = New ADODB.Recordset
+
+benimKullaniciAdim = sheets("index").Range("B3").Value
+benimSifrem = sheets("index").Range("B4").Value
+benimServerim = sheets("index").Range("B7").Value
+benimDatabaseim = sheets("index").Range("B8").Value
+benimTablom = sheets("index").Range("B9").Value
+benimTablom = sheets("index").Range("B9").Value
+strBenimProjem = sheets("index").ComboProjShortName.Value
+
+baglantiYolum = "Provider=SQLOLEDB; User ID=" & benimKullaniciAdim & "; Password=" & benimSifrem & ";Data Source=" & benimServerim & "; Initial Catalog=" & benimDatabaseim
+
+benimBaglantim.Open baglantiYolum
+Range("B2").Value = benimBaglantim.State
+Dim actCodeOnu As String
+Dim actQueueNo As Integer
+actQueueNo = 0
+actCodeOnu = sheets("dokum").Cells(satirsayisi, 9).Value
+'toplamWBSUzunlugu = Len(sheets("dokum").Cells(satirsayisi, 9).Value)
+
+sqlKodum = "Select a.task_id, a.wbs_id, a.task_code, a.task_name, a.target_drtn_hr_cnt, a.remain_drtn_hr_cnt," _
+    & "a.duration_type, a.complete_pct_type," _
+    & "c.clndr_name, a.task_type," _
+    & "a.cstr_type, a.cstr_date, a.cstr_type2, a.cstr_date2, " _
+    & "a.status_code, a.expect_end_date, a.suspend_date, a.resume_date " _
+    & "FROM (TASK a LEFT JOIN PROJWBS b ON a.wbs_id = b.wbs_id) " _
+    & "LEFT JOIN CALENDAR c ON a.clndr_id = c.clndr_id where a.wbs_id='" & wbsIDForActivity & " ' " _
+    & "order by a.task_code"
+
+
+Set benimRecordSetim = benimBaglantim.Execute(sqlKodum)
+
+sheets("dokum").Cells(1, 9).Value = "New Acitivity Code"
+sheets("dokum").Cells(1, 11).Value = "Length"
+While Not benimRecordSetim.EOF
+satirsayisi = satirsayisi + 1
+actQueueNo = actQueueNo + 1
+
+    sheets("dokum").Cells(satirsayisi, 1) = benimRecordSetim.Fields.Item(1).Value
+    sheets("dokum").Cells(satirsayisi, 8) = benimRecordSetim.Fields.Item(2).Value
+    sheets("dokum").Cells(satirsayisi, 6) = benimRecordSetim.Fields.Item(3).Value '/ DUR_TYPE
+    sheets("dokum").Cells(satirsayisi, 13).Formula = "=COUNTIF(C9,RC[-4])"
+    
+Select Case level
+
+Case 2
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0000000000000" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "000000000000" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+
+Case 3
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0000000000" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "000000000" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+
+Case 4
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0000000000" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "000000000" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+Case 5
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "00000000" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0000000" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+Case 6
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "00000" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0000" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+Case 7
+    If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "00" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = actCodeOnu & "." & "0" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+
+Case 8
+'If onlyForLevel8 = 1 And actQueueNo <= 9 Then
+'        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, Len(actCodeOnu) - 2) & "." & trade & "0" & actQueueNo
+'    ElseIf onlyForLevel8 = 1 And actQueueNo > 9 Then
+'        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, Len(actCodeOnu) - 2) & "." & trade & "" & actQueueNo
+'End If
+
+If tempQueueNo <= 9 Then
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "00" & tempQueueNo
+    ElseIf tempQueueNo >= 10 And tempQueueNo < 100 Then
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "0" & tempQueueNo
+    Else
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "" & tempQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+tempQueueNo = tempQueueNo + 1
+    
+    
+Case 9
+     If actQueueNo < 10 Then
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "00" & actQueueNo
+        ElseIf actQueueNo >= 10 And actQueueNo < 100 Then
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "0" & actQueueNo
+        Else
+        sheets("dokum").Cells(satirsayisi, 9) = Left(actCodeOnu, 16) & "." & "" & actQueueNo
+    End If
+    sheets("dokum").Rows(satirsayisi).Interior.ColorIndex = RGB(0, 0, 0)
+
+End Select
+
+sheets("dokum").Cells(satirsayisi, 11) = Len(sheets("dokum").Cells(satirsayisi, 9))
+
+    benimRecordSetim.MoveNext
+
+Wend
+End Sub
+
